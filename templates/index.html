@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Task Schedule Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>📋 Task Schedule Manager</h1>
+
+    <form id="taskForm">
+        <input type="text" id="title" placeholder="Task Title" required />
+        <input type="number" id="create_day" placeholder="Create on Day (1-31 or -1 for last day)" required />
+        <input type="number" id="due_days" placeholder="Due Days After Creation" required />
+        <button type="submit">➕ Add Task</button>
+    </form>
+
+    <h2>🗂 Scheduled Tasks</h2>
+    <ul id="taskList"></ul>
+
+    <script>
+        async function loadTasks() {
+            const res = await fetch('/api/tasks');
+            const tasks = await res.json();
+            const list = document.getElementById('taskList');
+            list.innerHTML = '';
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.textContent = `${task.title} (Create on: ${task.create_day}, Due in: ${task.due_days} days) `;
+                const delBtn = document.createElement('button');
+                delBtn.textContent = '❌ Delete';
+                delBtn.onclick = async () => {
+                    await fetch(`/api/tasks/${encodeURIComponent(task.title)}`, { method: 'DELETE' });
+                    loadTasks();
+                };
+                li.appendChild(delBtn);
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('taskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('title').value;
+            const create_day = parseInt(document.getElementById('create_day').value);
+            const due_days = parseInt(document.getElementById('due_days').value);
+
+            await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, create_day, due_days })
+            });
+
+            document.getElementById('taskForm').reset();
+            loadTasks();
+        });
+
+        loadTasks();
+    </script>
+</body>
+</html>
