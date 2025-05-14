@@ -9,6 +9,7 @@
 
     <form id="taskForm">
         <input type="text" id="title" placeholder="Task Title" required />
+        <input type="text" id="notes" placeholder="Task Notes" />
         <input type="number" id="create_day" placeholder="Create on Day (1-31 or -1 for last day)" required />
         <input type="number" id="due_days" placeholder="Due Days After Creation" required />
         <button type="submit">➕ Add Task</button>
@@ -43,11 +44,12 @@
             const title = document.getElementById('title').value;
             const create_day = parseInt(document.getElementById('create_day').value);
             const due_days = parseInt(document.getElementById('due_days').value);
+            const notes = document.getElementById('notes').value;
 
             await fetch('/api/tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, create_day, due_days })
+                body: JSON.stringify({ title, create_day, due_days, notes})
             });
 
             document.getElementById('taskForm').reset();
