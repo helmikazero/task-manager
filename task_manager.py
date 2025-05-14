@@ -13,7 +13,7 @@ MONGO_DB   = os.getenv("MONGO_DB", "task_db")
 MONGO_URI = f"mongodb://{MONGO_USER}:{MONGO_PASS}@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
-collection = db["tasks"]
+tasks_collection = db["tasks"]  # Consistent collection name
 
 @app.route("/")
 def index():
@@ -21,7 +21,7 @@ def index():
 
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
-    tasks = list(collection.find({}, {"_id": 0}))
+    tasks = list(tasks_collection.find({}, {"_id": 0}))
     return jsonify(tasks)
 
 @app.route("/api/tasks", methods=["POST"])
@@ -30,12 +30,14 @@ def add_task():
     required = {"title", "create_day", "due_days"}
     if not required.issubset(data):
         return jsonify({"error": "Missing required fields"}), 400
-    collection.insert_one(data)
+    # Add empty notes field for compatibility with scheduler
+    data["notes"] = data.get("notes", "")
+    tasks_collection.insert_one(data)
     return jsonify({"message": "Task added successfully"})
 
 @app.route("/api/tasks/<title>", methods=["DELETE"])
 def delete_task(title):
-    result = collection.delete_one({"title": title})
+    result = tasks_collection.delete_one({"title": title})
     if result.deleted_count == 0:
         return jsonify({"error": "Task not found"}), 404
     return jsonify({"message": "Task deleted"})
